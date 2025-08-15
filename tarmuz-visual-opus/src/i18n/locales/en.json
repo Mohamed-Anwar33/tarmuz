@@ -1,0 +1,151 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "hero": "Home Page",
+    "about": "About Us",
+    "services": "Services",
+    "portfolio": "Portfolio",
+    "testimonials": "Testimonials",
+    "contact": "Contact"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "upload": "Upload",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "download": "Download",
+    "print": "Print",
+    "export": "Export",
+    "import": "Import"
+  },
+  "layout": {
+    "adminPanel": "Admin Panel",
+    "brandName": "Tarmuz",
+    "logout": "Logout",
+    "contentManagement": "Website Content Management",
+    "toggleSidebar": "Toggle Sidebar"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to Dashboard",
+    "overview": "Overview",
+    "statistics": "Statistics",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions"
+  },
+  "hero": {
+    "title": "Home Page",
+    "mainTitle": "Main Title",
+    "subtitle": "Subtitle",
+    "description": "Description",
+    "backgroundImage": "Background Image",
+    "ctaButton": "Call to Action Button",
+    "ctaText": "Button Text",
+    "ctaLink": "Button Link"
+  },
+  "about": {
+    "title": "About Us",
+    "companyName": "Company Name",
+    "companyDescription": "Company Description",
+    "mission": "Mission",
+    "vision": "Vision",
+    "values": "Values",
+    "history": "History",
+    "team": "Team",
+    "achievements": "Achievements"
+  },
+  "services": {
+    "title": "Services",
+    "serviceName": "Service Name",
+    "serviceDescription": "Service Description",
+    "serviceIcon": "Service Icon",
+    "servicePrice": "Service Price",
+    "addService": "Add New Service",
+    "editService": "Edit Service",
+    "deleteService": "Delete Service"
+  },
+  "portfolio": {
+    "title": "Portfolio",
+    "projectName": "Project Name",
+    "projectDescription": "Project Description",
+    "projectImages": "Project Images",
+    "projectCategory": "Project Category",
+    "projectDate": "Project Date",
+    "projectClient": "Client",
+    "addProject": "Add New Project",
+    "editProject": "Edit Project",
+    "deleteProject": "Delete Project"
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "clientName": "Client Name",
+    "clientCompany": "Client Company",
+    "clientImage": "Client Image",
+    "testimonialText": "Testimonial Text",
+    "rating": "Rating",
+    "addTestimonial": "Add New Testimonial",
+    "editTestimonial": "Edit Testimonial",
+    "deleteTestimonial": "Delete Testimonial"
+  },
+  "contact": {
+    "title": "Contact",
+    "contactInfo": "Contact Information",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website",
+    "socialMedia": "Social Media",
+    "workingHours": "Working Hours",
+    "location": "Location",
+    "map": "Map"
+  },
+  "forms": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number",
+    "invalidUrl": "Invalid URL",
+    "minLength": "Minimum {{min}} characters",
+    "maxLength": "Maximum {{max}} characters",
+    "passwordMismatch": "Passwords do not match",
+    "selectFile": "Select File",
+    "dragDropFile": "Drag and drop file here or click to select",
+    "fileUploaded": "File uploaded successfully",
+    "uploadError": "Failed to upload file"
+  },
+  "messages": {
+    "saveSuccess": "Saved successfully",
+    "saveError": "Failed to save",
+    "deleteSuccess": "Deleted successfully",
+    "deleteError": "Failed to delete",
+    "uploadSuccess": "Uploaded successfully",
+    "uploadError": "Failed to upload",
+    "loadError": "Failed to load data",
+    "networkError": "Network connection error",
+    "serverError": "Server error",
+    "validationError": "Data validation error",
+    "confirmDelete": "Are you sure you want to delete?",
+    "unsavedChanges": "You have unsaved changes, do you want to continue?"
+  },
+  "language": {
+    "switchLanguage": "Switch Language",
+    "arabic": "العربية",
+    "english": "English",
+    "currentLanguage": "Current Language"
+  }
+}

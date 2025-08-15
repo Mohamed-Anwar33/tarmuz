@@ -1,0 +1,151 @@
+{
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "hero": "الصفحة الرئيسية",
+    "about": "نبذة عنا",
+    "services": "الخدمات",
+    "portfolio": "معرض الأعمال",
+    "testimonials": "آراء العملاء",
+    "contact": "التواصل"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "add": "إضافة",
+    "upload": "رفع",
+    "loading": "جاري التحميل...",
+    "success": "تم بنجاح",
+    "error": "حدث خطأ",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "view": "عرض",
+    "download": "تحميل",
+    "print": "طباعة",
+    "export": "تصدير",
+    "import": "استيراد"
+  },
+  "layout": {
+    "adminPanel": "لوحة الإدارة",
+    "brandName": "ترمُز",
+    "logout": "تسجيل الخروج",
+    "contentManagement": "إدارة محتوى الموقع",
+    "toggleSidebar": "إظهار/إخفاء الشريط الجانبي"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "welcome": "مرحباً بك في لوحة التحكم",
+    "overview": "نظرة عامة",
+    "statistics": "الإحصائيات",
+    "recentActivity": "النشاط الأخير",
+    "quickActions": "إجراءات سريعة"
+  },
+  "hero": {
+    "title": "الصفحة الرئيسية",
+    "mainTitle": "العنوان الرئيسي",
+    "subtitle": "العنوان الفرعي",
+    "description": "الوصف",
+    "backgroundImage": "صورة الخلفية",
+    "ctaButton": "زر الدعوة للعمل",
+    "ctaText": "نص الزر",
+    "ctaLink": "رابط الزر"
+  },
+  "about": {
+    "title": "نبذة عنا",
+    "companyName": "اسم الشركة",
+    "companyDescription": "وصف الشركة",
+    "mission": "الرسالة",
+    "vision": "الرؤية",
+    "values": "القيم",
+    "history": "التاريخ",
+    "team": "الفريق",
+    "achievements": "الإنجازات"
+  },
+  "services": {
+    "title": "الخدمات",
+    "serviceName": "اسم الخدمة",
+    "serviceDescription": "وصف الخدمة",
+    "serviceIcon": "أيقونة الخدمة",
+    "servicePrice": "سعر الخدمة",
+    "addService": "إضافة خدمة جديدة",
+    "editService": "تعديل الخدمة",
+    "deleteService": "حذف الخدمة"
+  },
+  "portfolio": {
+    "title": "معرض الأعمال",
+    "projectName": "اسم المشروع",
+    "projectDescription": "وصف المشروع",
+    "projectImages": "صور المشروع",
+    "projectCategory": "فئة المشروع",
+    "projectDate": "تاريخ المشروع",
+    "projectClient": "العميل",
+    "addProject": "إضافة مشروع جديد",
+    "editProject": "تعديل المشروع",
+    "deleteProject": "حذف المشروع"
+  },
+  "testimonials": {
+    "title": "آراء العملاء",
+    "clientName": "اسم العميل",
+    "clientCompany": "شركة العميل",
+    "clientImage": "صورة العميل",
+    "testimonialText": "نص الشهادة",
+    "rating": "التقييم",
+    "addTestimonial": "إضافة شهادة جديدة",
+    "editTestimonial": "تعديل الشهادة",
+    "deleteTestimonial": "حذف الشهادة"
+  },
+  "contact": {
+    "title": "التواصل",
+    "contactInfo": "معلومات التواصل",
+    "address": "العنوان",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "website": "الموقع الإلكتروني",
+    "socialMedia": "وسائل التواصل الاجتماعي",
+    "workingHours": "ساعات العمل",
+    "location": "الموقع",
+    "map": "الخريطة"
+  },
+  "forms": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "البريد الإلكتروني غير صحيح",
+    "invalidPhone": "رقم الهاتف غير صحيح",
+    "invalidUrl": "الرابط غير صحيح",
+    "minLength": "الحد الأدنى {{min}} أحرف",
+    "maxLength": "الحد الأقصى {{max}} حرف",
+    "passwordMismatch": "كلمات المرور غير متطابقة",
+    "selectFile": "اختر ملف",
+    "dragDropFile": "اسحب وأفلت الملف هنا أو انقر للاختيار",
+    "fileUploaded": "تم رفع الملف بنجاح",
+    "uploadError": "فشل في رفع الملف"
+  },
+  "messages": {
+    "saveSuccess": "تم الحفظ بنجاح",
+    "saveError": "فشل في الحفظ",
+    "deleteSuccess": "تم الحذف بنجاح",
+    "deleteError": "فشل في الحذف",
+    "uploadSuccess": "تم الرفع بنجاح",
+    "uploadError": "فشل في الرفع",
+    "loadError": "فشل في تحميل البيانات",
+    "networkError": "خطأ في الاتصال بالشبكة",
+    "serverError": "خطأ في الخادم",
+    "validationError": "خطأ في التحقق من البيانات",
+    "confirmDelete": "هل أنت متأكد من الحذف؟",
+    "unsavedChanges": "لديك تغييرات غير محفوظة، هل تريد المتابعة؟"
+  },
+  "language": {
+    "switchLanguage": "تغيير اللغة",
+    "arabic": "العربية",
+    "english": "English",
+    "currentLanguage": "اللغة الحالية"
+  }
+}
