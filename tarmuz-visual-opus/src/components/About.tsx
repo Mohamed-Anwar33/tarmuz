@@ -52,23 +52,27 @@ const About = () => {
     return () => clearInterval(interval);
   }, [slides.length]);
   
-  const features = [
-    {
-      icon: <Target className="w-6 h-6" />,
-      titleKey: "vision",
-      descriptionKey: "visionDesc"
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      titleKey: "team",
-      descriptionKey: "teamDesc"
-    },
-    {
-      icon: <Award className="w-6 h-6" />,
-      titleKey: "excellence",
-      descriptionKey: "excellenceDesc"
-    }
-  ];
+  const features = useMemo(() => {
+    const af: any = (aboutData as any)?.about_features || {};
+    const isAr = language === 'ar';
+    return [
+      {
+        icon: <Target className="w-6 h-6" />,
+        title: (isAr ? af?.vision?.title_ar : af?.vision?.title_en) || t('vision'),
+        description: (isAr ? af?.vision?.description_ar : af?.vision?.description_en) || t('visionDesc'),
+      },
+      {
+        icon: <Users className="w-6 h-6" />,
+        title: (isAr ? af?.team?.title_ar : af?.team?.title_en) || t('team'),
+        description: (isAr ? af?.team?.description_ar : af?.team?.description_en) || t('teamDesc'),
+      },
+      {
+        icon: <Award className="w-6 h-6" />,
+        title: (isAr ? af?.excellence?.title_ar : af?.excellence?.title_en) || t('excellence'),
+        description: (isAr ? af?.excellence?.description_ar : af?.excellence?.description_en) || t('excellenceDesc'),
+      },
+    ];
+  }, [aboutData, language, t]);
 
   return (
     <section id="about" className="py-20 bg-gradient-subtle relative overflow-hidden">
@@ -105,8 +109,8 @@ const About = () => {
                   <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
                     {feature.icon}
                   </div>
-                  <h4 className="font-semibold text-primary mb-2">{t(feature.titleKey)}</h4>
-                  <p className="text-sm text-muted-foreground">{t(feature.descriptionKey)}</p>
+                  <h4 className="font-semibold text-primary mb-2">{feature.title}</h4>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
                 </div>
               ))}
             </div>

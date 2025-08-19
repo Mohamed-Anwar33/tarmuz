@@ -3,6 +3,7 @@ import { getProjects } from '@/admin/api/projects';
 import { getTestimonials } from '@/admin/api/testimonials';
 import { getContent } from '@/admin/api/content';
 import { getCategories, getProjectCategories } from '@/admin/api/categories';
+import { getBrandingPublic } from '@/admin/api/settings';
 
 export const useProjects = () => {
   return useQuery({
@@ -65,5 +66,13 @@ export const useProjectCategories = () => {
     queryKey: ['project-categories'],
     queryFn: getProjectCategories,
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useBranding = () => {
+  return useQuery({
+    queryKey: ['branding-public'],
+    queryFn: getBrandingPublic,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 };

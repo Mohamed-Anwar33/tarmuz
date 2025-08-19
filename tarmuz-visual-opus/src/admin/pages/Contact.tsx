@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getContent, updateContent, ContentDoc } from '@/admin/api/content';
 import { getContactRecipient, updateContactRecipient } from '@/admin/api/settings';
+import { showSuccessToast, showErrorToast } from '@/utils/swal';
 
 type FormData = {
   title_ar?: string;
@@ -116,11 +117,15 @@ const Contact: React.FC = () => {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['content', 'contact'] });
+      showSuccessToast('تم حفظ بيانات التواصل بنجاح!');
+    },
+    onError: (error: any) => {
+      showErrorToast(error.message || 'حدث خطأ أثناء حفظ البيانات.');
     },
   });
 
-  const onSubmit = async (values: FormData) => {
-    await mutation.mutateAsync(values);
+  const onSubmit = (values: FormData) => {
+    mutation.mutate(values);
   };
 
   // Mutation to update recipient email
@@ -128,11 +133,15 @@ const Contact: React.FC = () => {
     mutationFn: (values: { contactRecipient: string }) => updateContactRecipient(values.contactRecipient),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', 'contact-recipient'] });
+      showSuccessToast('تم تحديث بريد الاستلام بنجاح.');
+    },
+    onError: (error: any) => {
+      showErrorToast(error.message || 'حدث خطأ أثناء تحديث البريد.');
     },
   });
 
-  const onSubmitRecipient = async (values: { contactRecipient: string }) => {
-    await updateRecipientMutation.mutateAsync(values);
+  const onSubmitRecipient = (values: { contactRecipient: string }) => {
+    updateRecipientMutation.mutate(values);
   };
 
   if (isLoading) return (
@@ -166,28 +175,6 @@ const Contact: React.FC = () => {
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {mutation.isSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <span className="text-green-800 font-medium">تم حفظ التغييرات بنجاح!</span>
-        </div>
-      )}
-
-      {mutation.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <span className="text-red-800 font-medium">حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.</span>
-        </div>
-      )}
 
       {/* Settings: Contact Recipient */}
       <form onSubmit={handleSettingsSubmit(onSubmitRecipient)} className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
@@ -221,12 +208,6 @@ const Contact: React.FC = () => {
           </button>
         </div>
 
-        {updateRecipientMutation.isSuccess && (
-          <div className="mt-4 text-emerald-700 text-sm">تم تحديث بريد الاستلام بنجاح.</div>
-        )}
-        {updateRecipientMutation.isError && (
-          <div className="mt-4 text-red-700 text-sm">حدث خطأ أثناء تحديث البريد.</div>
-        )}
       </form>
 
       {/* Form Card */}

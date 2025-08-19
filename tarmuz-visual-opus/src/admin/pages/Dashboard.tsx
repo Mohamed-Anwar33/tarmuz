@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useProjects, useTestimonials, useCategories, useServices } from '@/hooks/useAPI';
+import { showSuccessToast } from '@/utils/swal';
+import { useProjects, useTestimonials, useCategories, useServices, useAbout, useContact, useHero } from '@/hooks/useAPI';
 
 const getQuickActions = (t: any) => [
   {
@@ -82,21 +83,45 @@ const Dashboard: React.FC = () => {
   const testimonialsQ = useTestimonials();
   const servicesContentQ = useServices();
   const { data: categories, isLoading: loadingCategories, error: errorCategories } = useCategories();
+  const aboutQ = useAbout();
+  const contactQ = useContact();
+  const heroQ = useHero();
+
+  // Toast + navigation state
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Ensure fresh numbers when opening dashboard
   useEffect(() => {
     projectsQ.refetch();
     testimonialsQ.refetch();
     servicesContentQ.refetch();
+    aboutQ.refetch();
+    contactQ.refetch();
+    heroQ.refetch();
   }, []);
 
   const { data: projects, isLoading: loadingProjects, error: errorProjects } = projectsQ;
   const { data: testimonials, isLoading: loadingTestimonials, error: errorTestimonials } = testimonialsQ;
   const { data: servicesContent, isLoading: loadingServicesContent, error: errorServicesContent } = servicesContentQ;
+  const { data: aboutContent, isLoading: loadingAbout } = aboutQ as any;
+  const { data: contactContent, isLoading: loadingContact } = contactQ as any;
+  const { data: heroContent, isLoading: loadingHero } = heroQ as any;
 
   const servicesCount = servicesContent?.services?.length ?? 0;
   const loadingServices = loadingServicesContent;
   const errorServices = (errorServicesContent as Error | null) ?? null;
+
+  // Show success toast if navigated with state
+  useEffect(() => {
+    const st: any = location.state;
+    const successMsg = st?.success || st?.successMessage || st?.message;
+    if (successMsg) {
+      showSuccessToast(successMsg);
+      // Clear state so it doesn't reappear on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
 
   const stats = [
     { label: 'إجمالي المشاريع', value: projects?.length ?? 0, icon: '📊', loading: loadingProjects, error: errorProjects as Error | null },
@@ -105,8 +130,64 @@ const Dashboard: React.FC = () => {
     { label: 'تصنيفات الأعمال', value: categories?.length ?? 0, icon: '🏷️', loading: loadingCategories, error: errorCategories as Error | null },
   ];
 
+  // Errors banner
+  const hasErrors = Boolean(errorProjects || errorTestimonials || errorServices || errorCategories);
+
+  // Helper to format relative time (simple Arabic strings)
+  const formatRelativeTime = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const then = new Date(dateStr).getTime();
+    if (isNaN(then)) return '';
+    const now = Date.now();
+    const diff = Math.max(0, now - then);
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return 'الآن';
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    const days = Math.floor(hours / 24);
+    return `منذ ${days} يوم`;
+  };
+
+  // Build recent activities using available updatedAt fields
+  const latestCategory = categories && categories.length
+    ? [...categories].sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
+    : null;
+
+  const recentActivities: Array<{ color: string; title: string; time: string }> = [];
+  if (heroContent?.updatedAt) {
+    recentActivities.push({ color: 'bg-blue-500', title: 'تحديث الصفحة الرئيسية', time: formatRelativeTime(heroContent.updatedAt) });
+  }
+  if (aboutContent?.updatedAt) {
+    recentActivities.push({ color: 'bg-green-500', title: 'تحديث قسم نبذة عنا', time: formatRelativeTime(aboutContent.updatedAt) });
+  }
+  if (servicesContent?.updatedAt) {
+    recentActivities.push({ color: 'bg-purple-500', title: 'تحديث قسم الخدمات', time: formatRelativeTime(servicesContent.updatedAt) });
+  }
+  if (contactContent?.updatedAt) {
+    recentActivities.push({ color: 'bg-cyan-500', title: 'تحديث معلومات التواصل', time: formatRelativeTime(contactContent.updatedAt) });
+  }
+  if (latestCategory?.updatedAt) {
+    recentActivities.push({ color: 'bg-orange-500', title: `تحديث تصنيف: ${latestCategory.name_ar || latestCategory.name}`, time: formatRelativeTime(latestCategory.updatedAt) });
+  }
+  // Show at least 3 items; if not enough data, fill with placeholders
+  while (recentActivities.length < 3) {
+    recentActivities.push({ color: 'bg-slate-400', title: 'لا يوجد نشاط حديث', time: '' });
+  }
+
   return (
     <div className="space-y-8">
+      {/* Global Error Banner */}
+      {hasErrors && (
+        <div className="rounded-xl border border-red-200 bg-red-50 text-red-800 dark:border-red-800/50 dark:bg-red-900/30 dark:text-red-200 p-4">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86l-7.4 12.84A2 2 0 004.6 20h14.8a2 2 0 001.71-3.3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <p className="text-sm">{t('messages.loadError')}: حدث خطأ أثناء تحميل بعض البيانات. حاول التحديث لاحقًا.</p>
+          </div>
+        </div>
+      )}
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
         <div className="flex items-center justify-between">
@@ -122,13 +203,23 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Quick Create */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">إجراءات سريعة</h3>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/admin/portfolio" className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">+ مشروع جديد</Link>
+          <Link to="/admin/testimonials" className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">+ شهادة جديدة</Link>
+          <Link to="/admin/services" className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition">+ خدمة جديدة</Link>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('nav.testimonials')}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p>
                 {stat.loading ? (
                   <div className="mt-2 w-12 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
                 ) : (
@@ -142,6 +233,32 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Mini Chart for Stats */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">نظرة مرئية سريعة</h3>
+        <div className="space-y-3">
+          {stats.map((s, i) => {
+            const max = Math.max(1, ...stats.map((x) => Number(x.value) || 0));
+            const pct = Math.min(100, Math.round(((Number(s.value) || 0) / max) * 100));
+            return (
+              <div key={i} className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span>{s.label}</span>
+                  {s.loading ? (
+                    <span className="w-8 h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse inline-block" />
+                  ) : (
+                    <span>{s.value}</span>
+                  )}
+                </div>
+                <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded overflow-hidden">
+                  <div className={`h-2 rounded ${s.loading ? 'animate-pulse bg-slate-300 dark:bg-slate-600' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`} style={{ width: s.loading ? '40%' : `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -172,31 +289,37 @@ const Dashboard: React.FC = () => {
 
       {/* Recent Activity */}
       <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">النشاط الأخير</h3>
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">{t('dashboard.recentActivity')}</h3>
         <div className="space-y-4">
-          <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-800 dark:text-white">تم تحديث قسم "نبذة عنا"</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">منذ ساعتين</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-800 dark:text-white">تم إضافة مشروع جديد</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">منذ 4 ساعات</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-800 dark:text-white">تم تحديث معلومات التواصل</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t('nav.portfolio')}</p>
-            </div>
-          </div>
+          {(() => {
+            const loadingRecent = Boolean(loadingCategories || loadingAbout || loadingContact || loadingHero || loadingServicesContent);
+            if (loadingRecent) {
+              return Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg animate-pulse">
+                  <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-40 bg-slate-200 dark:bg-slate-600 rounded" />
+                    <div className="h-2 w-24 bg-slate-200 dark:bg-slate-600 rounded" />
+                  </div>
+                </div>
+              ));
+            }
+            return recentActivities.slice(0, 5).map((act, idx) => (
+              <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <div className={`w-2 h-2 rounded-full ${act.color}`}></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-800 dark:text-white">{act.title}</p>
+                  {act.time && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{act.time}</p>
+                  )}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </div>
+
+      
     </div>
   );
 };

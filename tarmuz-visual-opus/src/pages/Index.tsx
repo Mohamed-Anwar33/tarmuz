@@ -11,8 +11,11 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import IntroOverlay from "@/components/IntroOverlay";
 import ScrollProgress from "@/components/ScrollProgress";
+import { useLocation } from "react-router-dom";
 
 const Index = () => {
+  const location = useLocation();
+
   useEffect(() => {
     // Initialize AOS (Animate On Scroll)
     AOS.init({
@@ -43,6 +46,18 @@ const Index = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  // Smooth-scroll to hash when arriving via /#section from other pages
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash;
+    // Wait a tick to ensure sections are mounted
+    const t = setTimeout(() => {
+      const el = document.querySelector(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [location.hash]);
 
   return (
     <div className="min-h-screen">

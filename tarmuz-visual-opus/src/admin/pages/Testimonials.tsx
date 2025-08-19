@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createTestimonial, deleteTestimonial, getTestimonials, Testimonial, updateTestimonial } from '@/admin/api/testimonials';
+import { showConfirmationDialog, showErrorToast, showSuccessToast } from '@/utils/swal';
 import { API_BASE } from '@/lib/config';
 
 type FormData = Omit<Testimonial, '_id'> & { _id?: string };
@@ -13,8 +14,6 @@ const Testimonials: React.FC = () => {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const toAbs = (p?: string) => {
     if (!p) return '';
@@ -30,16 +29,30 @@ const Testimonials: React.FC = () => {
   }, [data, search]);
 
   const createMut = useMutation({
-    mutationFn: (payload: Omit<Testimonial, '_id'>) => createTestimonial(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['testimonials'] }),
+    mutationFn: createTestimonial,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['testimonials'] });
+      setShowModal(false);
+      showSuccessToast('تمت إضافة الرأي بنجاح');
+    },
+    onError: (err: any) => showErrorToast(err.message || 'فشل إنشاء الرأي'),
   });
   const updateMut = useMutation({
     mutationFn: (payload: { id: string; data: Partial<Testimonial> }) => updateTestimonial(payload.id, payload.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['testimonials'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['testimonials'] });
+      setShowModal(false);
+      showSuccessToast('تم تحديث الرأي بنجاح');
+    },
+    onError: (err: any) => showErrorToast(err.message || 'فشل تحديث الرأي'),
   });
   const deleteMut = useMutation({
-    mutationFn: (id: string) => deleteTestimonial(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['testimonials'] }),
+    mutationFn: deleteTestimonial,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['testimonials'] });
+      showSuccessToast('تم حذف الرأي بنجاح');
+    },
+    onError: (err: any) => showErrorToast(err.message || 'فشل حذف الرأي'),
   });
 
   const startCreate = () => {
@@ -54,27 +67,22 @@ const Testimonials: React.FC = () => {
     setShowModal(true);
   };
 
-  const onSubmit = async (values: FormData) => {
+  const onSubmit = (values: FormData) => {
     const { _id, ...payload } = values;
     if (_id) {
-      await updateMut.mutateAsync({ id: _id, data: payload });
+      updateMut.mutate({ id: _id, data: payload });
     } else {
-      await createMut.mutateAsync(payload);
+      createMut.mutate(payload);
     }
-    setShowModal(false);
-    setEditingTestimonial(null);
   };
 
-  const onDelete = async (id?: string) => {
-    if (!id) return;
-    setDeletingId(id);
-    try {
-      await deleteMut.mutateAsync(id);
-    } catch (e) {
-      console.error('Failed to delete testimonial', e);
-    } finally {
-      setDeletingId(null);
-      setConfirmDeleteId(null);
+  const handleDelete = async (id: string) => {
+    const confirmed = await showConfirmationDialog(
+      'هل أنت متأكد من الحذف؟',
+      'سيتم حذف هذا الرأي ولا يمكن التراجع عن هذا الإجراء.'
+    );
+    if (confirmed) {
+      deleteMut.mutate(id);
     }
   };
 
@@ -131,20 +139,11 @@ const Testimonials: React.FC = () => {
               <button type="button" onClick={() => startEdit(t)} className="w-full px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold text-sm transition-colors">تعديل</button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!t._id) return;
-                  if (confirmDeleteId !== t._id) {
-                    setConfirmDeleteId(t._id);
-                    setTimeout(() => setConfirmDeleteId((curr) => (curr === t._id ? null : curr)), 3000);
-                    return;
-                  }
-                  onDelete(t._id);
-                }}
-                disabled={deletingId === t._id || deleteMut.isPending}
-                className={`w-full px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${confirmDeleteId === t._id ? 'text-white bg-red-600 hover:bg-red-700 border-red-600' : 'text-red-600 hover:bg-red-50 border-red-200'} disabled:opacity-50`}
+                onClick={() => handleDelete(t._id)}
+                disabled={deleteMut.isPending && deleteMut.variables === t._id}
+                className="w-full px-4 py-2 rounded-lg border font-semibold text-sm transition-colors text-red-600 hover:bg-red-50 border-red-200 disabled:opacity-50"
               >
-                {deletingId === t._id ? 'جارٍ...' : (confirmDeleteId === t._id ? 'تأكيد؟' : 'حذف')}
+                {deleteMut.isPending && deleteMut.variables === t._id ? 'جارٍ الحذف...' : 'حذف'}
               </button>
             </div>
           </div>

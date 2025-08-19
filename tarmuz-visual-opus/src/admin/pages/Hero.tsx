@@ -4,12 +4,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getContent, updateContent } from '@/admin/api/content';
 import { uploadFile } from '@/lib/api';
 import { API_BASE } from '@/lib/config';
+import { showSuccessToast, showErrorToast } from '@/utils/swal';
 
 type FormData = {
   title_ar: string;
   title_en: string;
   description_ar: string;
   description_en: string;
+  content_ar: string; // inspirational line (AR)
+  content_en: string; // inspirational line (EN)
   image: string;
   images?: string[];
 };
@@ -34,9 +37,24 @@ const Hero: React.FC = () => {
     queryFn: () => getContent('hero'),
   });
 
+  // Defaults for inspirational line and main text (mirrors public fallbacks)
+  const defaults = {
+    ar: {
+      title: 'تَرْمُز',
+      description: 'الهندسة – التصميم – الهوية – الإبداع البصري',
+      line: 'رحلتك من التخطيط إلى التميز',
+    },
+    en: {
+      title: 'TARMUZ',
+      description: 'Engineering – Design – Identity – Visual Creativity',
+      line: 'Your journey from planning to excellence',
+    },
+  } as const;
+
   const mutation = useMutation({
     mutationFn: (data: FormData) => updateContent('hero', data),
     onSuccess: (resp: any, variables: FormData) => {
+      showSuccessToast('تم حفظ التغييرات بنجاح!');
       // Optimistically ensure images are in cache, even if backend drops them
       const sentImages = (variables as any).images || images;
       queryClient.setQueryData(['content','hero'], (prev: any) => ({
@@ -53,16 +71,18 @@ const Hero: React.FC = () => {
       }
     },
     onError: (error: any) => {
-      console.error('Save error:', error);
+      showErrorToast(error.message || 'حدث خطأ أثناء الحفظ.');
     },
   });
 
   React.useEffect(() => {
     if (content) {
-      setValue('title_ar', content.title_ar || '');
-      setValue('title_en', content.title_en || '');
-      setValue('description_ar', content.description_ar || '');
-      setValue('description_en', content.description_en || '');
+      setValue('title_ar', content.title_ar || defaults.ar.title);
+      setValue('title_en', content.title_en || defaults.en.title);
+      setValue('description_ar', content.description_ar || defaults.ar.description);
+      setValue('description_en', content.description_en || defaults.en.description);
+      setValue('content_ar', (content as any).content_ar || defaults.ar.line);
+      setValue('content_en', (content as any).content_en || defaults.en.line);
       setValue('image', content.image || '');
       setImagePreview(content.image ? toAbs((content.image || '').split(',')[0]) : '');
       // If backend didn't persist images[], but stored CSV in image, parse it
@@ -89,7 +109,8 @@ const Hero: React.FC = () => {
         try {
           const result = await uploadFile(file);
           newPaths.push(result.filePath);
-        } catch (err) {
+        } catch (err: any) {
+          showErrorToast(`فشل رفع الصورة: ${file.name}`);
           console.error('Upload error for file:', file.name, err);
         }
       }
@@ -97,9 +118,10 @@ const Hero: React.FC = () => {
         setImages(prev => [...prev, ...newPaths]);
         setValue('image', newPaths[0]);
         setImagePreview(toAbs(newPaths[newPaths.length - 1]));
+        showSuccessToast(`${newPaths.length} صور تم رفعها بنجاح`);
       }
-    } catch (error) {
-      console.error('Upload error:', error);
+    } catch (error: any) {
+      showErrorToast(error.message || 'حدث خطأ أثناء رفع الصور.');
       setImagePreview('');
     } finally {
       setUploadingImage(false);
@@ -153,28 +175,6 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {mutation.isSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <span className="text-green-800 font-medium">تم حفظ التغييرات بنجاح!</span>
-        </div>
-      )}
-
-      {mutation.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <span className="text-red-800 font-medium">حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.</span>
-        </div>
-      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -214,6 +214,15 @@ const Hero: React.FC = () => {
                 />
                 {errors.description_ar && <p className="text-red-500 text-sm">{errors.description_ar.message}</p>}
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">الجملة الإلهامية (تحت الوصف)</label>
+                <input
+                  {...register('content_ar')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="رحلتك من التخطيط إلى التميز"
+                />
+              </div>
             </div>
 
             {/* English Content */}
@@ -239,6 +248,15 @@ const Hero: React.FC = () => {
                   placeholder="Enter a brief description about the company and services"
                 />
                 {errors.description_en && <p className="text-red-500 text-sm">{errors.description_en.message}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Inspirational Line (below description)</label>
+                <input
+                  {...register('content_en')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Your journey from planning to excellence"
+                />
               </div>
             </div>
           </div>

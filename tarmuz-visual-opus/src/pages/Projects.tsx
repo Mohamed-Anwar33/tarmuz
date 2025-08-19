@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Filter, Grid, List, Search, ArrowRight, ArrowLeft, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink, Filter, Search, ArrowRight, ArrowLeft, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Navbar from "@/components/Navbar";
@@ -16,7 +16,6 @@ import { useProjects, useCategories, useProjectCategories } from "@/hooks/useAPI
 
 const Projects = () => {
   const [activeFilter, setActiveFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -271,25 +270,7 @@ const Projects = () => {
               ))}
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex gap-2 bg-primary/10 rounded-lg p-1">
-              <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-                className="transition-all duration-300"
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className="transition-all duration-300"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
+            {/* View Mode Toggle removed */}
           </div>
         </div>
       </section>
@@ -331,16 +312,7 @@ const Projects = () => {
                     key={image.id}
                     className="group relative bg-white rounded-lg overflow-hidden elegant-shadow hover:shadow-xl transition-all duration-300 cursor-pointer animate-fade-in-up"
                     style={{ animationDelay: `${index * 50}ms` }}
-                    onClick={() => {
-                      setSelectedImage(image);
-                      setModalOpen(true);
-                      // Find all images from the same project for slideshow
-                      const projectImages = allImages.filter(img => img.projectId === image.projectId);
-                      setCurrentSlideIndex(projectImages.findIndex(img => img.id === image.id));
-                      // Reset zoom & pan on open
-                      setZoom(1);
-                      setPan({ x: 0, y: 0 });
-                    }}
+                    onClick={() => navigate(`/project/${image.projectId}`)}
                   >
                     {/* Image */}
                     <div className="relative overflow-hidden aspect-square">

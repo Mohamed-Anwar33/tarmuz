@@ -17,6 +17,7 @@ const ProjectDetails = () => {
   const { language } = useLanguage();
   const { data: projectsData, isLoading } = useProjects();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
   // Zoom/Pan state
   const [zoomEnabled, setZoomEnabled] = useState(true);
   const [zoom, setZoom] = useState(1);
@@ -26,6 +27,7 @@ const ProjectDetails = () => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
   const project = projectsData?.find(p => p._id === id);
+  const extra: any = project || {};
 
   const nextImage = () => {
     if (project?.images && project.images.length > 1) {
@@ -46,6 +48,25 @@ const ProjectDetails = () => {
     setIsPanning(false);
     setLastPos(null);
   }, [currentImageIndex, project?._id]);
+
+  // Autoplay with energetic transitions
+  useEffect(() => {
+    if (!autoplay || !(project?.images?.length && project.images.length > 1)) return;
+    const id = window.setInterval(() => {
+      nextImage();
+    }, 1800); // fast cycle for "video-like" feel
+    return () => window.clearInterval(id);
+  }, [autoplay, project?.images?.length]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [project?.images?.length]);
 
   if (isLoading) {
     return (
@@ -86,6 +107,7 @@ const ProjectDetails = () => {
   }, [project?._id]);
 
   const currentImage = images[currentImageIndex];
+  const progressPercent = images.length > 0 ? Math.round(((currentImageIndex + 1) / images.length) * 100) : 0;
   
   // Build a safe image URL from API, fixing malformed stored paths
   const toImageUrl = (path?: string) => {
@@ -112,6 +134,7 @@ const ProjectDetails = () => {
 
   // Zoom helpers
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+  
   // Use native wheel listener to allow preventDefault without warnings
   useEffect(() => {
     const el = viewportRef.current;
@@ -151,18 +174,30 @@ const ProjectDetails = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
       <Navbar />
-      {/* Header: Title and Meta (Category/Date) */}
+      {/* Simple Header: Title and Meta Only */}
       <section className="pt-28 pb-8 bg-transparent">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
               {language === 'ar' ? (project.title_ar || project.title_en || '') : (project.title_en || project.title_ar || '')}
             </h1>
-            {(project.category) && (
-              <p className="text-sm text-muted-foreground">
-                {project.category}
-              </p>
-            )}
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              {project.category && (
+                <span className="inline-flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
+                  {language === 'ar' ? 'الفئة:' : 'Category:'} {project.category}
+                </span>
+              )}
+              {extra.location && (
+                <span className="inline-flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
+                  {language === 'ar' ? 'الموقع:' : 'Location:'} {language === 'ar' ? (extra.location_ar || extra.location) : (extra.location || extra.location_ar)}
+                </span>
+              )}
+              {extra.year && (
+                <span className="inline-flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
+                  {language === 'ar' ? 'السنة:' : 'Year:'} {extra.year}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -172,34 +207,52 @@ const ProjectDetails = () => {
         <section className="py-6">
           <div className="container mx-auto px-4">
             <div className="max-w-5xl mx-auto relative rounded-xl overflow-hidden elegant-shadow">
-              {/* Image viewport with zoom/pan */}
+              {/* Image viewport with zoom/pan and autoplay slider */}
               <div
-                className={`w-full h-[380px] md:h-[520px] bg-black flex items-center justify-center ${zoomEnabled && zoom > 1 ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'}`}
+                className={`relative w-full h-[380px] md:h-[520px] bg-black flex items-center justify-center ${zoomEnabled && zoom > 1 ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'}`}
                 style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
                 ref={viewportRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={endPan}
-                onMouseLeave={endPan}
+                onMouseLeave={() => { endPan(); setAutoplay(true); }}
+                onMouseEnter={() => setAutoplay(false)}
               >
-                <img
-                  src={currentImage ? toImageUrl(currentImage) : portfolio1}
-                  alt={language === 'ar' ? project.title_ar : project.title_en}
-                  className="max-w-full max-h-full object-contain select-none"
-                  onError={(e) => { e.currentTarget.src = portfolio1; }}
-                  style={{
-                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                    transition: isPanning ? 'none' : 'transform 0.15s ease-out',
-                  }}
-                  draggable={false}
-                />
+                {/* Progress bar */}
+                {images.length > 1 && (
+                  <div className="absolute left-0 right-0 top-0 h-1 bg-white/10">
+                    <div
+                      className="h-full bg-primary/80 transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                )}
+                {/* Stack all images and crossfade/zoom between them for a "video-like" motion */}
+                <div className="absolute inset-0">
+                  {images.map((img, i) => (
+                    <img
+                      key={i}
+                      src={img ? toImageUrl(img) : portfolio1}
+                      alt={language === 'ar' ? project.title_ar : project.title_en}
+                      className={`absolute inset-0 w-full h-full object-contain select-none transition-all duration-700 ease-out ${i === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+                      onError={(e) => { e.currentTarget.src = portfolio1; }}
+                      draggable={false}
+                      style={{
+                        transform: i === currentImageIndex ? `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` : undefined,
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
 
-              {/* Zoom controls */}
+              {/* Zoom / Autoplay controls */}
               <div className={`absolute top-3 ${language === 'ar' ? 'left-3' : 'right-3'} flex items-center gap-2 bg-white/90 backdrop-blur rounded-full p-2 shadow`}
               >
                 <Button variant="outline" size="sm" onClick={() => setZoomEnabled((v) => !v)}>
                   {language === 'ar' ? (zoomEnabled ? 'إيقاف الزوم' : 'تفعيل الزوم') : (zoomEnabled ? 'Disable Zoom' : 'Enable Zoom')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setAutoplay((v) => !v)}>
+                  {language === 'ar' ? (autoplay ? 'إيقاف العرض' : 'تشغيل العرض') : (autoplay ? 'Pause' : 'Play')}
                 </Button>
                 <Button variant="outline" size="icon" onClick={zoomOut} disabled={!zoomEnabled}>
                   <Minus className="w-4 h-4" />
@@ -229,12 +282,49 @@ const ProjectDetails = () => {
                   >
                     <ArrowRight className="w-4 h-4" />
                   </Button>
+                  {/* Dots */}
+                  <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2">
+                    {images.map((_, i) => (
+                      <button
+                        key={i}
+                        aria-label={`Go to slide ${i + 1}`}
+                        onClick={() => { setCurrentImageIndex(i); setAutoplay(false); }}
+                        className={`h-2.5 rounded-full transition-all ${i === currentImageIndex ? 'w-6 bg-primary' : 'w-2.5 bg-white/60 hover:bg-white'}`}
+                      />
+                    ))}
+                  </div>
                 </>
               )}
             </div>
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="max-w-5xl mx-auto mt-4">
+                <div className="overflow-x-auto">
+                  <div className="flex gap-3">
+                    {images.map((img, i) => (
+                      <button
+                        key={`thumb-${i}`}
+                        onClick={() => { setCurrentImageIndex(i); setAutoplay(false); }}
+                        className={`relative shrink-0 w-20 h-16 md:w-24 md:h-20 rounded-md overflow-hidden border ${i === currentImageIndex ? 'ring-2 ring-primary border-primary' : 'border-white/40 hover:border-white'}`}
+                        title={`${language === 'ar' ? 'صورة' : 'Image'} ${i + 1}`}
+                      >
+                        <img
+                          src={img ? toImageUrl(img) : portfolio1}
+                          onError={(e) => { e.currentTarget.src = portfolio1; }}
+                          alt={`thumb-${i + 1}`}
+                          className="w-full h-full object-cover bg-white"
+                          draggable={false}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
+
       {images.length === 0 && (
         <section className="py-6">
           <div className="container mx-auto px-4">

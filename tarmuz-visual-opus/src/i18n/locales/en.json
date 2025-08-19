@@ -6,7 +6,8 @@
     "services": "Services",
     "portfolio": "Portfolio",
     "testimonials": "Testimonials",
-    "contact": "Contact"
+    "contact": "Contact",
+    "account": "Account"
   },
   "common": {
     "save": "Save",
@@ -141,6 +142,22 @@
     "validationError": "Data validation error",
     "confirmDelete": "Are you sure you want to delete?",
     "unsavedChanges": "You have unsaved changes, do you want to continue?"
+  },
+  "account": {
+    "title": "Account Settings",
+    "profile": "Update Profile",
+    "password": "Change Password",
+    "username": "Username",
+    "usernamePlaceholder": "Enter username",
+    "email": "Email",
+    "emailPlaceholder": "example@mail.com",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "updatePassword": "Update Password",
+    "loginOptions": "Login Form Options",
+    "showEmailField": "Show email field",
+    "enableEmailField": "Enable email field"
   },
   "language": {
     "switchLanguage": "Switch Language",

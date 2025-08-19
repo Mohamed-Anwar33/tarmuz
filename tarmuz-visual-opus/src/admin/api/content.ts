@@ -23,6 +23,26 @@ export type ContentDoc = {
     description_ar?: string;
     description_en?: string;
   }>;
+  about_features?: {
+    vision?: {
+      title_ar?: string;
+      title_en?: string;
+      description_ar?: string;
+      description_en?: string;
+    };
+    team?: {
+      title_ar?: string;
+      title_en?: string;
+      description_ar?: string;
+      description_en?: string;
+    };
+    excellence?: {
+      title_ar?: string;
+      title_en?: string;
+      description_ar?: string;
+      description_en?: string;
+    };
+  };
   contact?: {
     email?: string;
     phone?: string;

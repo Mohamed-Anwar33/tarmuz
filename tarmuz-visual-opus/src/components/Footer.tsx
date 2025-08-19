@@ -1,16 +1,27 @@
 import { MapPin, Phone, Mail, Instagram, Twitter, Linkedin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
-import logo from "@/assets/logo.png";
+import logoFallback from "@/assets/logo.png";
 import { useContact } from "@/hooks/useAPI";
+import { useBranding } from "@/hooks/useAPI";
+import { API_BASE } from "@/lib/config";
 
 const Footer = () => {
   const { t, language } = useLanguage();
   const { data: contactData } = useContact();
+  const { data: branding } = useBranding();
   const address = language === 'ar' ? (contactData?.contact?.address_ar || '') : (contactData?.contact?.address_en || '');
   const phone = contactData?.contact?.phone || '';
   const email = contactData?.contact?.email || '';
   const social = contactData?.social || {} as any;
+  const resolveUrl = (u?: string) => {
+    const v = (u || '').trim();
+    if (!v) return '';
+    if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('data:')) return v;
+    const path = v.startsWith('/') ? v : `/${v}`;
+    return `${API_BASE}${path}`;
+  };
+  const logoSrc = branding?.logoUrl ? resolveUrl(branding.logoUrl) : logoFallback;
   return (
     <footer className="bg-primary text-white relative overflow-hidden">
       {/* Background Pattern */}
@@ -22,7 +33,7 @@ const Footer = () => {
             {/* Company Info */}
             <div className="lg:col-span-2">
               <Link to="/" aria-label="Go to home" className="inline-block mb-4">
-                <img src={logo} alt="TARMUZ" className="h-12 w-auto hover:scale-105 transition-transform" />
+                <img src={logoSrc} alt="TARMUZ" className="h-12 w-auto hover:scale-105 transition-transform" />
               </Link>
               <p className="text-white/80 leading-relaxed mb-6">
                 {t('heroTagline')}
@@ -38,10 +49,10 @@ const Footer = () => {
             <div>
               <h4 className="text-xl font-semibold mb-6">{language === 'ar' ? 'روابط سريعة' : 'Quick Links'}</h4>
               <ul className="space-y-3">
-                <li><a href="#about" className="text-white/80 hover:text-accent transition-colors">{t('about')}</a></li>
-                <li><a href="#services" className="text-white/80 hover:text-accent transition-colors">{t('services')}</a></li>
-                <li><a href="#portfolio" className="text-white/80 hover:text-accent transition-colors">{t('portfolio')}</a></li>
-                <li><a href="#contact" className="text-white/80 hover:text-accent transition-colors">{t('contact')}</a></li>
+                <li><Link to="/#about" className="text-white/80 hover:text-accent transition-colors">{t('about')}</Link></li>
+                <li><Link to="/#services" className="text-white/80 hover:text-accent transition-colors">{t('services')}</Link></li>
+                <li><Link to="/#portfolio" className="text-white/80 hover:text-accent transition-colors">{t('portfolio')}</Link></li>
+                <li><Link to="/#contact" className="text-white/80 hover:text-accent transition-colors">{t('contact')}</Link></li>
               </ul>
             </div>
 

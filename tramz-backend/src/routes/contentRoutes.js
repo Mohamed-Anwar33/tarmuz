@@ -3,13 +3,14 @@ const router = express.Router();
 const contentController = require('../controllers/contentController');
 const { protect } = require('../middlewares/authMiddleware');
 
-// Public routes
+// Public: Get all content or by type
 router.get('/', contentController.getAllContent);
 router.get('/:type', contentController.getContent);
 
-// Protected routes (require authentication)
-router.post('/', protect, contentController.createContent);
-router.put('/:type', protect, contentController.updateContent);
-router.delete('/:id', protect, contentController.deleteContent);
+// Protected: Admin actions
+router.use(protect);
+router.post('/', contentController.createContent);
+router.put('/:type', contentController.updateContent);
+router.delete('/:id', contentController.deleteContent);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getContent, updateContent, ContentDoc } from '../api/content';
+import { showConfirmationDialog, showErrorToast, showSuccessToast } from '@/utils/swal';
 import { useForm } from 'react-hook-form';
 
 const Services: React.FC = () => {
@@ -37,13 +38,19 @@ const Services: React.FC = () => {
   const services: ServiceItem[] = (content?.services ?? []).map((s, i) => ({ _key: `${i}-${s?.name_ar || s?.name_en || 'srv'}` , ...s }));
 
   const saveMutation = useMutation({
-    mutationFn: (nextServices: ServiceItem[]) => updateContent('services', { services: nextServices }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content','services'] });
+    mutationFn: (payload: { services: ServiceItem[]; message: string }) => updateContent('services', { services: payload.services }),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['content', 'services'] });
       setEditingId(null);
       setShowForm(false);
       reset();
+      showSuccessToast(variables.message);
     },
+    onError: (err: any) => {
+      // eslint-disable-next-line no-console
+      console.error('Service update failed', err);
+      showErrorToast(err.message || 'فشلت العملية. حاول مرة أخرى.');
+    }
   });
 
   const onSubmit = (data: ServiceItem) => {
@@ -51,10 +58,10 @@ const Services: React.FC = () => {
       const idx = services.findIndex(s => s._key === editingId);
       const next = [...services];
       if (idx >= 0) next[idx] = { ...next[idx], ...data };
-      saveMutation.mutate(next);
+      saveMutation.mutate({ services: next, message: 'تم تحديث الخدمة بنجاح!' });
     } else {
       const next = [...services, { ...data }];
-      saveMutation.mutate(next);
+      saveMutation.mutate({ services: next, message: 'تم إضافة الخدمة بنجاح!' });
     }
   };
 
@@ -143,19 +150,6 @@ const Services: React.FC = () => {
         </div>
       </div>
 
-      {/* Success Messages */}
-      {(saveMutation.isSuccess) && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <span className="text-green-800 font-medium">
-            {editingId ? 'تم تحديث الخدمة بنجاح!' : 'تم إضافة الخدمة بنجاح!'}
-          </span>
-        </div>
-      )}
 
       {/* Controls */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
@@ -282,7 +276,6 @@ const Services: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     {editingId ? 'حفظ التغييرات' : 'إضافة الخدمة'}
-                    {editingId ? 'تحديث الخدمة' : 'إضافة الخدمة'}
                   </>
                 )}
               </button>
@@ -308,10 +301,14 @@ const Services: React.FC = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => {
-                    if (confirm('هل أنت متأكد من حذف هذه الخدمة؟')) {
+                  onClick={async () => {
+                    const confirmed = await showConfirmationDialog(
+                      'هل أنت متأكد من الحذف؟',
+                      `سيتم حذف خدمة "${service.name_ar}". لا يمكن التراجع عن هذا الإجراء.`
+                    );
+                    if (confirmed) {
                       const next = services.filter(s => (s._key || '') !== (service._key || ''));
-                      saveMutation.mutate(next);
+                      saveMutation.mutate({ services: next, message: 'تم حذف الخدمة بنجاح!' });
                     }
                   }}
                   className="p-2 text-slate-400 hover:text-red-600 transition-colors"

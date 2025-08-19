@@ -18,6 +18,27 @@ const contentSchema = new mongoose.Schema({
     description_ar: String,
     description_en: String,
   }],
+  // نصوص قابلة للتحرير لقسم "نبذة عنا": الرؤية، الفريق، التميز
+  about_features: {
+    vision: {
+      title_ar: String,
+      title_en: String,
+      description_ar: String,
+      description_en: String,
+    },
+    team: {
+      title_ar: String,
+      title_en: String,
+      description_ar: String,
+      description_en: String,
+    },
+    excellence: {
+      title_ar: String,
+      title_en: String,
+      description_ar: String,
+      description_en: String,
+    },
+  },
   contact: { // بيانات التواصل
     email: String,
     phone: String,

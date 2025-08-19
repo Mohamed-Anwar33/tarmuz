@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getContent, updateContent, ContentDoc } from '@/admin/api/content';
 import { uploadFile } from '@/lib/api';
+import { showSuccessToast, showErrorToast } from '@/utils/swal';
 import { API_BASE } from '@/lib/config';
 
 type FormData = {
@@ -12,6 +13,19 @@ type FormData = {
   description_en?: string;
   image?: string;
   images?: string[];
+  // About Features (flat fields for form, will be nested into about_features on save)
+  vision_title_ar?: string;
+  vision_title_en?: string;
+  vision_desc_ar?: string;
+  vision_desc_en?: string;
+  team_title_ar?: string;
+  team_title_en?: string;
+  team_desc_ar?: string;
+  team_desc_en?: string;
+  excellence_title_ar?: string;
+  excellence_title_en?: string;
+  excellence_desc_ar?: string;
+  excellence_desc_en?: string;
 };
 
 const About: React.FC = () => {
@@ -33,6 +47,26 @@ const About: React.FC = () => {
     queryFn: () => getContent('about'),
   });
 
+  // Default values mirroring current public translations
+  const defaults = {
+    ar: {
+      title: 'عن تَرْمُز',
+      description:
+        'نقود مستقبل التصميم المعماري والإبداع البصري بحلول مبتكرة تجمع بين التميز الهندسي والرؤية الفنية. رسالتنا هي ابتكار مساحات وهويات ملهمة، ندمج فيها الدقة التقنية مع لمسة إبداعية فريدة. وبفريق عمل متخصص وخبرة تمتد لسنوات، تقوم "تَرْمُز" بتحويل الأفكار إلى واقع خالد يجمع بين الجمال والوظيفية.',
+      vision: { title: 'الرؤية', desc: 'إنشاء مساحات مبتكرة تلهم وتحول المجتمعات' },
+      team: { title: 'الفريق', desc: 'مهندسون معماريون ومصممون وخبراء يعملون معاً' },
+      excellence: { title: 'التميز', desc: 'مشاريع حائزة على جوائز تضع معايير جديدة في الصناعة' },
+    },
+    en: {
+      title: 'About TARMUZ',
+      description:
+        'We lead the future of architectural design and visual creativity through innovative solutions that merge engineering excellence with artistic vision. Our mission is to craft spaces and identities that inspire, combining technical precision with a unique creative touch. With a dedicated team and years of experience, TARMUZ transforms ideas into timeless, functional, and visually striking realities.',
+      vision: { title: 'Vision', desc: 'Creating innovative spaces that inspire and transform communities' },
+      team: { title: 'Team', desc: 'Expert architects, designers, and engineers working together' },
+      excellence: { title: 'Excellence', desc: 'Award-winning projects that set new industry standards' },
+    },
+  } as const;
+
   const mutation = useMutation({
     mutationFn: (data: FormData) => updateContent('about', data),
     onSuccess: (resp: any, variables: FormData) => {
@@ -44,19 +78,34 @@ const About: React.FC = () => {
         image: resp?.image || (Array.isArray(sentImages) && sentImages.length ? sentImages.join(',') : prev?.image),
       }));
       queryClient.invalidateQueries({ queryKey: ['content', 'about'] });
+      showSuccessToast('تم حفظ التغييرات بنجاح!');
     },
     onError: (error: any) => {
-      console.error('Save error:', error);
+      showErrorToast(error.message || 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.');
     },
   });
 
   React.useEffect(() => {
     if (content) {
-      setValue('title_ar', content.title_ar || '');
-      setValue('title_en', content.title_en || '');
-      setValue('description_ar', content.description_ar || '');
-      setValue('description_en', content.description_en || '');
+      setValue('title_ar', content.title_ar || defaults.ar.title);
+      setValue('title_en', content.title_en || defaults.en.title);
+      setValue('description_ar', content.description_ar || defaults.ar.description);
+      setValue('description_en', content.description_en || defaults.en.description);
       setValue('image', content.image || '');
+      // preload about_features
+      const af = (content as ContentDoc).about_features as any;
+      setValue('vision_title_ar', af?.vision?.title_ar || defaults.ar.vision.title);
+      setValue('vision_title_en', af?.vision?.title_en || defaults.en.vision.title);
+      setValue('vision_desc_ar', af?.vision?.description_ar || defaults.ar.vision.desc);
+      setValue('vision_desc_en', af?.vision?.description_en || defaults.en.vision.desc);
+      setValue('team_title_ar', af?.team?.title_ar || defaults.ar.team.title);
+      setValue('team_title_en', af?.team?.title_en || defaults.en.team.title);
+      setValue('team_desc_ar', af?.team?.description_ar || defaults.ar.team.desc);
+      setValue('team_desc_en', af?.team?.description_en || defaults.en.team.desc);
+      setValue('excellence_title_ar', af?.excellence?.title_ar || defaults.ar.excellence.title);
+      setValue('excellence_title_en', af?.excellence?.title_en || defaults.en.excellence.title);
+      setValue('excellence_desc_ar', af?.excellence?.description_ar || defaults.ar.excellence.desc);
+      setValue('excellence_desc_en', af?.excellence?.description_en || defaults.en.excellence.desc);
       const csv = (content.image || '')
         .split(',')
         .map(s => s.trim())
@@ -81,6 +130,7 @@ const About: React.FC = () => {
           newPaths.push(res.filePath);
         } catch (err) {
           console.error('Upload error for file:', file.name, err);
+          showErrorToast(`فشل رفع الملف: ${file.name}`);
         }
       }
       if (newPaths.length) {
@@ -89,8 +139,8 @@ const About: React.FC = () => {
         setValue('image', csv);
         setImagePreview(toAbs(newPaths[newPaths.length - 1]));
       }
-    } catch (error) {
-      console.error('Upload error:', error);
+    } catch (error: any) {
+      showErrorToast(error.message || 'حدث خطأ أثناء رفع الصور.');
       setImagePreview('');
     } finally {
       setUploadingImage(false);
@@ -106,6 +156,26 @@ const About: React.FC = () => {
       images: unique,
       gallery: unique,
       image: csv || data.image || '',
+      about_features: {
+        vision: {
+          title_ar: data.vision_title_ar || '',
+          title_en: data.vision_title_en || '',
+          description_ar: data.vision_desc_ar || '',
+          description_en: data.vision_desc_en || '',
+        },
+        team: {
+          title_ar: data.team_title_ar || '',
+          title_en: data.team_title_en || '',
+          description_ar: data.team_desc_ar || '',
+          description_en: data.team_desc_en || '',
+        },
+        excellence: {
+          title_ar: data.excellence_title_ar || '',
+          title_en: data.excellence_title_en || '',
+          description_ar: data.excellence_desc_ar || '',
+          description_en: data.excellence_desc_en || '',
+        },
+      },
     } as any;
     mutation.mutate(payload);
   };
@@ -138,28 +208,6 @@ const About: React.FC = () => {
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {mutation.isSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <span className="text-green-800 font-medium">تم حفظ التغييرات بنجاح!</span>
-        </div>
-      )}
-
-      {mutation.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <span className="text-red-800 font-medium">حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.</span>
-        </div>
-      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -224,6 +272,83 @@ const About: React.FC = () => {
                   placeholder="Write a detailed description about the company, its vision, mission, and values..."
                 />
                 {errors.description_en && <p className="text-red-500 text-sm">{errors.description_en.message}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section (الرؤية، الفريق، التميز) */}
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            ميزات القسم (الرؤية، الفريق، التميز)
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Vision */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 border-b border-slate-200 pb-2">الرؤية</h3>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">عنوان (AR)</label>
+                <input {...register('vision_title_ar')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">وصف (AR)</label>
+                <textarea rows={4} {...register('vision_desc_ar')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Title (EN)</label>
+                <input {...register('vision_title_en')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Description (EN)</label>
+                <textarea rows={4} {...register('vision_desc_en')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" />
+              </div>
+            </div>
+
+            {/* Team */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 border-b border-slate-200 pb-2">الفريق</h3>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">عنوان (AR)</label>
+                <input {...register('team_title_ar')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">وصف (AR)</label>
+                <textarea rows={4} {...register('team_desc_ar')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Title (EN)</label>
+                <input {...register('team_title_en')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Description (EN)</label>
+                <textarea rows={4} {...register('team_desc_en')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" />
+              </div>
+            </div>
+
+            {/* Excellence */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 border-b border-slate-200 pb-2">التميز</h3>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">عنوان (AR)</label>
+                <input {...register('excellence_title_ar')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">وصف (AR)</label>
+                <textarea rows={4} {...register('excellence_desc_ar')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Title (EN)</label>
+                <input {...register('excellence_title_en')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Description (EN)</label>
+                <textarea rows={4} {...register('excellence_desc_en')} className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" />
               </div>
             </div>
           </div>

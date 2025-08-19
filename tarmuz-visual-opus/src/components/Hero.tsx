@@ -90,12 +90,13 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Inspirational Line */
-          }
-          <div className="mb-10 fade-in-up opacity-0 stagger-2" data-aos="fade-up" data-aos-delay="200">
+          {/* Inspirational Line from backend with fallback */}
+          <div className="mb-10 fade-in-up opacity-0" data-aos="fade-up" data-aos-delay="200">
             <p className="text-3xl md:text-4xl font-extrabold tracking-wide">
               <span className="bg-gradient-to-r from-accent to-white bg-clip-text text-transparent drop-shadow text-shine">
-                {language === 'ar' ? 'رحلتك من التخطيط إلى التميز' : 'Your journey from planning to excellence'}
+                {language === 'ar'
+                  ? (heroData?.content_ar || 'رحلتك من التخطيط إلى التميز')
+                  : (heroData?.content_en || 'Your journey from planning to excellence')}
               </span>
             </p>
           </div>

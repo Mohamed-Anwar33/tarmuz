@@ -20,6 +20,8 @@ import Portfolio from "@/admin/pages/Portfolio";
 import Testimonials from "@/admin/pages/Testimonials";
 import Contact from "@/admin/pages/Contact";
 import DataMigration from "@/admin/pages/DataMigration";
+import Account from "@/admin/pages/Account";
+import Branding from "./admin/pages/Branding";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +52,9 @@ const App = () => (
                     <Route path="portfolio" element={<Portfolio />} />
                     <Route path="testimonials" element={<Testimonials />} />
                     <Route path="contact" element={<Contact />} />
+                    <Route path="branding" element={<Branding />} />
                     <Route path="data-migration" element={<DataMigration />} />
+                    <Route path="account" element={<Account />} />
                   </Route>
                 </Route>
 

@@ -6,7 +6,8 @@
     "services": "الخدمات",
     "portfolio": "معرض الأعمال",
     "testimonials": "آراء العملاء",
-    "contact": "التواصل"
+    "contact": "التواصل",
+    "account": "حسابي"
   },
   "common": {
     "save": "حفظ",
@@ -141,6 +142,22 @@
     "validationError": "خطأ في التحقق من البيانات",
     "confirmDelete": "هل أنت متأكد من الحذف؟",
     "unsavedChanges": "لديك تغييرات غير محفوظة، هل تريد المتابعة؟"
+  },
+  "account": {
+    "title": "إعدادات الحساب",
+    "profile": "تحديث الملف الشخصي",
+    "password": "تغيير كلمة المرور",
+    "username": "اسم المستخدم",
+    "usernamePlaceholder": "اكتب اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "example@mail.com",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "updatePassword": "تحديث كلمة المرور",
+    "loginOptions": "إعدادات نموذج الدخول",
+    "showEmailField": "إظهار حقل البريد الإلكتروني",
+    "enableEmailField": "تفعيل حقل البريد الإلكتروني"
   },
   "language": {
     "switchLanguage": "تغيير اللغة",

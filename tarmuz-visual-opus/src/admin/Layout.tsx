@@ -70,6 +70,25 @@ const getNavItems = (t: any) => [
       </svg>
     )
   },
+  { 
+    to: '/admin/branding', 
+    label: t('nav.branding') || 'العلامة',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 015.657 5.657L12 16l-5.657-5.657A4 4 0 1112 4.354z" />
+      </svg>
+    )
+  },
+  { 
+    to: '/admin/account', 
+    label: t('nav.account'),
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 12a5 5 0 100-10 5 5 0 000 10z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
+      </svg>
+    )
+  },
 ];
 
 const AdminLayout: React.FC = () => {

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createProject, deleteProject, getProjects, Project, updateProject } from '@/admin/api/projects';
+import { showConfirmationDialog, showErrorToast, showSuccessToast } from '@/utils/swal';
 // removed featured projects content linkage
 import { API_BASE } from '@/lib/config';
 
@@ -49,8 +50,6 @@ const Portfolio: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [search, setSearch] = useState('');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   
 
@@ -71,11 +70,15 @@ const Portfolio: React.FC = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
   });
   const deleteMut = useMutation({
-    mutationFn: (id: string) => deleteProject(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      showSuccessToast('تم حذف المشروع بنجاح');
+    },
     onError: (err) => {
       // eslint-disable-next-line no-console
       console.error('[deleteProject] failed', err);
+      showErrorToast('فشل حذف المشروع');
     },
   });
 
@@ -109,36 +112,32 @@ const Portfolio: React.FC = () => {
       description_en: values.description_en,
       category: values.category,
     } as Project;
-    // Save project
-    let saved: Project | undefined;
-    if (values._id) {
-      saved = await updateMut.mutateAsync({ id: values._id, data: payload, files });
-    } else {
-      saved = await createMut.mutateAsync({ data: payload, files });
+    try {
+      if (values._id) {
+        await updateMut.mutateAsync({ id: values._id, data: payload, files });
+        showSuccessToast('تم تحديث المشروع بنجاح');
+      } else {
+        await createMut.mutateAsync({ data: payload, files });
+        showSuccessToast('تم إنشاء المشروع بنجاح');
+      }
+      reset({});
+      setFiles([]);
+      setShowModal(false);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to save project', error);
+      showErrorToast('فشل حفظ المشروع');
     }
-
-    // removed featuredIds sync
-    reset({});
-    setFiles([]);
-    setShowModal(false);
   };
 
-  const onDelete = async (id?: string) => {
+  const handleDelete = async (id?: string) => {
     if (!id) return;
-    try {
-      setDeletingId(id);
-      // eslint-disable-next-line no-console
-      console.debug('[onDelete] deleting id', id);
-      await deleteMut.mutateAsync(id);
-      // eslint-disable-next-line no-alert
-      // alert('تم حذف المشروع بنجاح'); // اختياري
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('[onDelete] error', e);
-      // eslint-disable-next-line no-alert
-      alert('تعذر حذف المشروع، حاول مرة أخرى');
-    } finally {
-      setDeletingId(null);
+    const confirmed = await showConfirmationDialog(
+      'هل أنت متأكد من الحذف؟',
+      'سيتم حذف هذا المشروع وكل الصور المرتبطة به. لا يمكن التراجع عن هذا الإجراء.'
+    );
+    if (confirmed) {
+      deleteMut.mutate(id);
     }
   };
 
@@ -194,20 +193,11 @@ const Portfolio: React.FC = () => {
                 <button type="button" onClick={() => startEdit(p)} className="w-full px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold text-sm transition-colors">تعديل</button>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!p._id) return;
-                    if (confirmDeleteId !== p._id) {
-                      setConfirmDeleteId(p._id);
-                      setTimeout(() => setConfirmDeleteId((curr) => (curr === p._id ? null : curr)), 3000);
-                      return;
-                    }
-                    onDelete(p._id);
-                  }}
-                  disabled={deletingId === p._id || deleteMut.isPending}
-                  className={`w-full px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${confirmDeleteId === p._id ? 'text-white bg-red-600 hover:bg-red-700 border-red-600' : 'text-red-600 hover:bg-red-50 border-red-200'} disabled:opacity-50`}
+                  onClick={() => handleDelete(p._id)}
+                  disabled={deleteMut.isPending && deleteMut.variables === p._id}
+                  className="w-full px-4 py-2 rounded-lg border font-semibold text-sm transition-colors text-red-600 hover:bg-red-50 border-red-200 disabled:opacity-50"
                 >
-                  {deletingId === p._id ? 'جارٍ...' : (confirmDeleteId === p._id ? 'تأكيد؟' : 'حذف')}
+                  {deleteMut.isPending && deleteMut.variables === p._id ? 'جارٍ الحذف...' : 'حذف'}
                 </button>
               </div>
             </div>

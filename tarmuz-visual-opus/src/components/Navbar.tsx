@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import logo from "@/assets/logo.png";
+import logoFallback from "@/assets/logo.png";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useBranding } from "@/hooks/useAPI";
+import { API_BASE } from "@/lib/config";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +13,7 @@ const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: branding } = useBranding();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,6 +48,19 @@ const Navbar = () => {
     }
   };
 
+  const resolveUrl = (u?: string) => {
+    const v = (u || '').trim();
+    if (!v) return '';
+    if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('data:')) return v;
+    const path = v.startsWith('/') ? v : `/${v}`;
+    return `${API_BASE}${path}`;
+  };
+
+  const onLightBg = !(location.pathname === '/' && !isScrolled);
+  const primaryLogo = branding?.logoUrl ? resolveUrl(branding.logoUrl) : logoFallback;
+  const scrolledLogo = branding?.logoUrlScrolled ? resolveUrl(branding.logoUrlScrolled) : undefined;
+  const logoSrc = onLightBg ? (scrolledLogo || primaryLogo) : primaryLogo;
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
       (location.pathname === '/' && !isScrolled)
@@ -67,11 +83,9 @@ const Navbar = () => {
             }}
           >
             <img 
-              src={logo} 
+              src={logoSrc} 
               alt="TARMUZ" 
-              className={`h-12 w-auto transition-all duration-300 hover:scale-105 cursor-pointer ${
-                (location.pathname === '/' && !isScrolled) ? '' : 'brightness-0 saturate-100'
-              }`}
+              className={`h-12 w-auto transition-all duration-300 hover:scale-105 cursor-pointer`}
             />
           </button>
 

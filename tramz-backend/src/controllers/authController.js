@@ -80,3 +80,63 @@ exports.verifyToken = async (req, res) => {
     res.status(500).json({ msg: 'Internal server error' });
   }
 };
+
+// Update profile (username/email)
+exports.updateProfile = async (req, res) => {
+  try {
+    const id = req.user?.id;
+    if (!id) return res.status(401).json({ msg: 'Unauthorized' });
+    const username = clean(req.body.username);
+    const email = clean((req.body.email || '').toLowerCase());
+
+    if (!username || username.length < 3 || username.length > 32) {
+      return res.status(400).json({ msg: 'Invalid username' });
+    }
+    if (!email || !isEmail(email) || email.length > 254) {
+      return res.status(400).json({ msg: 'Invalid email' });
+    }
+
+    const conflicts = await User.findOne({
+      _id: { $ne: id },
+      $or: [{ username }, { email }]
+    });
+    if (conflicts) {
+      return res.status(400).json({ msg: 'Username or email already in use' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { username, email },
+      { new: true, runValidators: true, context: 'query' }
+    ).select('-password');
+    res.json({ msg: 'Profile updated', user });
+  } catch (err) {
+    res.status(500).json({ msg: 'Unable to update profile' });
+  }
+};
+
+// Change password (requires currentPassword)
+exports.changePassword = async (req, res) => {
+  try {
+    const id = req.user?.id;
+    if (!id) return res.status(401).json({ msg: 'Unauthorized' });
+    const currentPassword = String(req.body.currentPassword || '');
+    const newPassword = String(req.body.newPassword || '');
+
+    if (!newPassword || newPassword.length < 6 || newPassword.length > 128) {
+      return res.status(400).json({ msg: 'Invalid new password' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    const ok = await user.comparePassword(currentPassword);
+    if (!ok) return res.status(400).json({ msg: 'Current password is incorrect' });
+
+    user.password = newPassword; // will be hashed by pre('save')
+    await user.save();
+    res.json({ msg: 'Password updated' });
+  } catch (err) {
+    res.status(500).json({ msg: 'Unable to change password' });
+  }
+};

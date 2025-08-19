@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { getServices, deleteService } from '@/admin/api/services';
 import { createTestimonial, getTestimonials, deleteTestimonial } from '@/admin/api/testimonials';
 import { createProject, getProjects, deleteProject } from '@/admin/api/projects';
-import { useToast } from '@/components/ui/use-toast';
+import { showSuccessToast, showErrorToast, showConfirmationDialog } from '@/utils/swal';
 import { API_PREFIX } from '@/lib/config';
 import { DEFAULT_CONTENT } from '@/contexts/SiteContentContext';
 import { updateContent } from '@/admin/api/content';
@@ -16,7 +16,6 @@ async function urlToFile(url: string, filename?: string): Promise<File> {
 }
 
 export default function DataMigration() {
-  const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [log, setLog] = useState<string[]>([]);
 
@@ -29,7 +28,7 @@ export default function DataMigration() {
       // Auth check
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        toast({ title: 'Authentication required', description: 'الرجاء تسجيل الدخول ثم إعادة المحاولة', variant: 'destructive' });
+        showErrorToast('مطلوب المصادقة: الرجاء تسجيل الدخول ثم إعادة المحاولة');
         setBusy(false);
         return;
       }
@@ -143,23 +142,29 @@ export default function DataMigration() {
       }
       appendLog('Projects exported.');
 
-      toast({ title: 'Export complete', description: 'All content exported to database.' });
+      showSuccessToast('Export complete: All content exported to database.');
     } catch (err: any) {
       console.error(err);
-      toast({ title: 'Export failed', description: err.message || String(err), variant: 'destructive' });
+      showErrorToast(`Export failed: ${err.message || String(err)}`);
     } finally {
       setBusy(false);
     }
   };
 
   const resetData = async () => {
+    const confirmed = await showConfirmationDialog(
+      'هل أنت متأكد من حذف البيانات؟',
+      'سيتم حذف جميع المشاريع والخدمات والشهادات الحالية. لا يمكن التراجع عن هذا الإجراء.'
+    );
+    if (!confirmed) return;
+
     setBusy(true);
     setLog([]);
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
         appendLog('✗ No auth token found. Please log in first.');
-        toast({ title: 'خطأ', description: 'يرجى تسجيل الدخول أولاً', variant: 'destructive' });
+        showErrorToast('يرجى تسجيل الدخول أولاً');
         return;
       }
 
@@ -215,23 +220,29 @@ export default function DataMigration() {
       }
 
       appendLog('Reset completed.');
-      toast({ title: 'تم', description: 'تم حذف البيانات الموجودة' });
+      showSuccessToast('تم حذف البيانات الموجودة');
     } catch (err: any) {
       appendLog(`✗ Reset failed: ${err?.message || String(err)}`);
-      toast({ title: 'خطأ', description: 'فشل في حذف البيانات', variant: 'destructive' });
+      showErrorToast(`فشل في حذف البيانات: ${err?.message || String(err)}`);
     } finally {
       setBusy(false);
     }
   };
 
   const resetAndExport = async () => {
+    const confirmed = await showConfirmationDialog(
+      'هل أنت متأكد من الحذف والاستيراد؟',
+      'سيتم حذف جميع البيانات الحالية ثم استيراد المحتوى الافتراضي. لا يمكن التراجع عن هذا الإجراء.'
+    );
+    if (!confirmed) return;
+
     setBusy(true);
     setLog([]);
     try {
       // Auth check
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        toast({ title: 'Authentication required', description: 'الرجاء تسجيل الدخول ثم إعادة المحاولة', variant: 'destructive' });
+        showErrorToast('مطلوب المصادقة: الرجاء تسجيل الدخول ثم إعادة المحاولة');
         setBusy(false);
         return;
       }
@@ -240,7 +251,7 @@ export default function DataMigration() {
       await exportContent();
     } catch (err: any) {
       console.error(err);
-      toast({ title: 'Reset failed', description: err.message || String(err), variant: 'destructive' });
+      showErrorToast(`Reset & Export failed: ${err.message || String(err)}`);
     } finally {
       setBusy(false);
     }
